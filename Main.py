@@ -1,14 +1,9 @@
 #-------------------------------------------------------------------------------
 # Name:         Lending Club Strategy Generator
-# Purpose:      To generate strategies to choose notes on LendingClub.com
+# Purpose:      To generate note choosing strategies on LendingClub.com
 # Author:       Zachariah Kendall
 # Created:      04/01/2013
-# 
 # Version:      0.5
-# Notes:        I began this idea in Java in December 2012.
-#               I taught myself SQL and trying out many differ Java implementations of it.
-#               At the time I started teachign myself Python over Christmas break.
-#               I decided to switch the project over to Python as a way of learning Python.
 #-------------------------------------------------------------------------------
 
 # Global imports
