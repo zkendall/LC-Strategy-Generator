@@ -22,7 +22,7 @@ APP_OPEN_DB = 3
 APP_GENERATE = 4
 
 
-    class MyWindow(wx.Frame):
+class MyWindow(wx.Frame):
     """This is the GUI class"""
     def __init__(self, *args, **kwargs):
         super(MyWindow, self).__init__(*args, **kwargs)
