@@ -5,39 +5,40 @@
 # Created:   01/01/2013
 #-------------------------------------------------------------------------------
 
-import sqlite3, os, csv
+import sqlite3, csv
 import os.path
 
 
 class Db(object):
     def __init__(self):
         self.dbLoaded = False
-        print "Db class initialized"
+##        print "Db class initialized"
 
     def close(self):
-        self.conn.close()
+        if hasattr(self, 'conn'):
+            self.conn.close()
+            print "Db connection closed"
 
     def connectToDb(self, dbFilename='loans.db'):
-        print "Connect to db"
+        print "Connecting to db"
         self.conn = sqlite3.connect(dbFilename)
         self.cursor = self.conn.cursor()
         self.dbLoaded = True
+        print "Connected to db"
 
-    def buildDb(self, csvFileAddress):
+    def buildDb(self, csvFileAddress='LoanStats.csv' , dbFilename='loans.db'):
         # If db exists ask to replace.
         # The prompt needs changed to window.
 ##      replace = 'n'
-##      if os.path.isfile(dbFileAddress):
+##      if os.path.isfile(dbFilenamedbFilenamedbFilename):
 ##          #replace = raw_input("Database Exists. Remove and replace? y/n")
 ##          if replace == 'y':
-##              try: os.remove(dbFileAddress)
-##              except: print "Could not remove", dbFileAddress
+##              try: os.remove(dbFilenamedbFilename)
+##              except: print "Could not remove", dbFilename
 
         # Connect
-        # Prompt for output filename?
-        self.conn = sqlite3.connect("loans.db")
+        self.conn = sqlite3.connect(dbFilename)
         self.cursor = self.conn.cursor()
-##      if replace == 'y':
         self.createTable()
         with open(csvFileAddress, 'r') as csvfile:
             csvfile.next()  # skip header
@@ -162,7 +163,7 @@ class Db(object):
 
 
 ################################################################################
-######################## Helper Methods for building Db ########################
+#######################  Helper Methods for building Db  #######################
 ################################################################################
 def calculateROI(self, loanAmount, paidAmount):
     amount = float(loanAmount)

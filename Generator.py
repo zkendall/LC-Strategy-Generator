@@ -101,8 +101,8 @@ def runGenerator(db):
     if not db.dbLoaded:
         print "Databse is not loaded"
         return
-    global numFilters
     print "Generating. . ."
+    global numFilters
     startTime = time.time()
 
     # Select filter set
@@ -127,6 +127,4 @@ def runGenerator(db):
     print "Highest Count:\t", highestCount
     print "\nNumber of Queries:\t", queryCount
     print "Elapsed Time: ", time.time() - startTime
-
-
 

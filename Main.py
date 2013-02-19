@@ -1,13 +1,18 @@
 #-------------------------------------------------------------------------------
 # Name:         Lending Club Strategy Generator
-# Purpose:      To generate note choosing strategies on LendingClub.com
+# Purpose:      To generate strategies to choose notes on LendingClub.com
 # Author:       Zachariah Kendall
 # Created:      04/01/2013
+#
 # Version:      0.5
+# Notes:        I began this idea in Java in December 2012.
+#               I taught myself SQL and trying out many differ Java implementations of it.
+#               At the time I started teachign myself Python over Christmas break.
+#               I decided to switch the project over to Python as a way of learning Python.
 #-------------------------------------------------------------------------------
 
 # Global imports
-import wx, os
+import wx, os, logging
 
 # Local imports
 import Generator, Db
@@ -19,21 +24,17 @@ db = Db.Db()
 APP_EXIT = 1
 APP_OPEN_CSV = 2
 APP_OPEN_DB = 3
-APP_GENERATE = 4
+#APP_GENERATE = 4
 
 
-    class MyWindow(wx.Frame):
+class MyWindow(wx.Frame):
     """This is the GUI class"""
+    global  db;
     def __init__(self, *args, **kwargs):
         super(MyWindow, self).__init__(*args, **kwargs)
         self.SetSize((250, 300))
-
+        # Initialize User Interface #
         self.InitUI()
-
-        # Window Attributes #
-        self.Centre()
-        self.SetTitle('LendingClub Strategy Generator')
-        self.Show(True)
 
     def InitUI(self):
         self.currentDirectory = os.getcwd()
@@ -49,10 +50,8 @@ APP_GENERATE = 4
         # Top Button Set
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         btn1 = wx.Button(midPan, label='Generate')
-        btn1.Bind(wx.EVT_BUTTON, Generator.runGenerator(db))
+        btn1.Bind(wx.EVT_BUTTON, self.onGenerate)
         hbox1.Add(btn1)
-
-
 
         panel.SetSizer(vbox)
 
@@ -62,14 +61,13 @@ APP_GENERATE = 4
         open_csv_mi = wx.MenuItem(fileMenu, APP_OPEN_CSV, '&Open CSV')
         open_db_mi = wx.MenuItem(fileMenu, APP_OPEN_DB, '&Open DB')
 
-
         fileMenu.AppendItem(open_csv_mi)
         fileMenu.AppendItem(open_db_mi)
         fileMenu.AppendItem(quit_mi)
 
-        self.Bind(wx.EVT_MENU, self.OnQuit, id=APP_EXIT)
-        self.Bind(wx.EVT_MENU, self.onOpenCSV, id=APP_OPEN_CSV)
-        self.Bind(wx.EVT_MENU, self.onOpenDb, id=APP_OPEN_DB)
+        self.Bind(wx.EVT_MENU, self.OnQuit, quit_mi)
+        self.Bind(wx.EVT_MENU, self.onOpenCSV, open_csv_mi)
+        self.Bind(wx.EVT_MENU, self.onOpenDb, open_db_mi)
 
 
         # Menu Bar #
@@ -77,11 +75,15 @@ APP_GENERATE = 4
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
 
+        # Status Bar #
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText('Ready')
+        self.statusbar.Show()
+
 
     def OnQuit(self, e):
-        print "Quitted!"
+        print "Quitting!"
         db.close()
-        print "Db closed"
         self.Close()
 
     def onOpenCSV(self, e):
@@ -94,7 +96,7 @@ APP_GENERATE = 4
                 style=wx.OPEN | wx.MULTIPLE | wx.CHANGE_DIR
                 )
         if dlg.ShowModal() == wx.ID_OK:
-            paths = dlg.GetPaths()
+            paths = dlg.GetPath()
             Db.csvFileAddress = paths
         dlg.Destroy()
 
@@ -108,18 +110,25 @@ APP_GENERATE = 4
                 style = wx.OPEN | wx.CHANGE_DIR
                 )
         if dlg.ShowModal() == wx.ID_OK:
-            paths = dlg.GetPaths()
-            Db.dbFileAddress = paths
+            path = dlg.GetPath()
+            db.connectToDb(path)
         dlg.Destroy()
+
+    def onGenerate(self, e):
+        """Run Generator"""
+        Generator.runGenerator(db)
 
 
 ##########################################################
 
-def main():
-    ex = wx.App()
-    MyWindow(None)
-    ex.MainLoop()
-
+class MyApp(wx.App):
+    def __init__(self, redirect=False, filename=None):
+        wx.App.__init__(self, redirect, filename)
+        self.frame = MyWindow(None)
+        self.frame.Show()
+        self.frame.Centre()
+        self.frame.SetTitle('LendingClub Strategy Generator')
 
 if __name__ == '__main__':
-    main()
+    app = MyApp()
+    app.MainLoop()
