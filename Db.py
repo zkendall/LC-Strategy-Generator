@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
-# Name:      Lending Club Database Module
-# Purpose:   Manage SQLite db for generator
-# Author:    Zachariah Kendall
-# Created:   01/01/2013
+# Name:     Lending Club Database Module
+# Purpose:  Manage SQLite db for generator
+# Author:   Zachariah Kendall
+# Log:      01/~~/2013 - Created
 #-------------------------------------------------------------------------------
 
 import sqlite3, csv
@@ -21,7 +21,8 @@ class Db(object):
 
     def connectToDb(self, dbFilename='loans.db'):
         print "Connecting to db"
-        self.conn = sqlite3.connect(dbFilename)
+        self.conn = sqlite3.connect(dbFilename, check_same_thread = False)  # Thank god this option exists!
+                                                                            # But, will it effect performance or lead to crashes?
         self.cursor = self.conn.cursor()
         self.dbLoaded = True
         print "Connected to db"

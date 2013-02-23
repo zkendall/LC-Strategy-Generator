@@ -1,11 +1,14 @@
 #-------------------------------------------------------------------------------
-# Name:      Lending Club Generator Module
-# Purpose:   Used to iterate through combinations of loan filters.
-# Author:    Zachariah Kendall
-# Created:   01/01/2013
+# Name:     Lending Club Generator Module
+# Purpose:  Used to iterate through combinations of loan filters.
+#              - The generator class subclasses Thread.
+# Author:   Zachariah Kendall
+# Log:      01/--/2013 - Created
+#           02/20/2013 - Made to run in seperate thread
 #-------------------------------------------------------------------------------
 
 from itertools import combinations
+import threading #from threading import Thread
 import time
 
 # Filter options #
@@ -31,8 +34,8 @@ status = {"'In Review'": False, "'Issued'": False, "'Current'": False, \
         #  There are lots of loans in review, in progress, etc... That produce an
         #  unreliable ROI.
 
-# Other options #
-doPrint = False     # Print selections and queries
+# Other Options #
+doPrint = True      # Print selections and queries
 numFilters = 4      # How many filters to select at once
 valueCount = 4      # How many values to select at once
 minNoteCount = 300  # The minimum number of notes to make it into 'highest'
@@ -42,6 +45,9 @@ highestROI = 0
 highestCount = 0
 highestQuery = ""
 queryCount = 0
+
+# Other Other #
+#abortEvent = threading.Event()
 
 
 def getFilter(f):
@@ -65,48 +71,26 @@ def buildQuery():
     return query
 
 
-def exhaustFilters(db):
+def runGenerator(db, abortEvent):
+    if not db.dbLoaded:
+        print "Databse is not loaded"
+        return
+    print "Generating. . ."
+    global numFilters
+    #global abortEvent
     global highestROI
     global highestCount
     global highestQuery
     global queryCount
     global valueCount
     global minNoteCount
-
-    for f in useFilter.keys():
-        if useFilter[f] == True:
-            # Cycle filters properties!
-            optionList = eval(f)
-            # Select values in filter
-            for selected in combinations(optionList.keys(), valueCount):
-                # Turn off all options
-                for v in optionList.keys():
-                    optionList[v] = False
-
-                # Turn on selected set
-                for v in selected:
-                    optionList[v] = True
-
-                # Test values
-                query = buildQuery()
-                result = db.getROIandCount(query)
-                if result[0] > highestROI and result[1] > minNoteCount:
-                    highestROI = result[0]
-                    highestCount = result[1]
-                    highestQuery = query
-                queryCount = queryCount + 1
-
-
-def runGenerator(db):
-    if not db.dbLoaded:
-        print "Databse is not loaded"
-        return
-    print "Generating. . ."
-    global numFilters
     startTime = time.time()
-
     # Select filter set
     for f in combinations(useFilter.keys(), numFilters):
+        if abortEvent.is_set():
+            print "Aborting..."
+            return False
+            
         # Turn off all filters
         for k in useFilter.keys():
             useFilter[k] = False
@@ -119,8 +103,36 @@ def runGenerator(db):
             print "Selected filters: \t", [a for a in useFilter.keys() if useFilter[a] == True]
 
         #Use filters....
-        exhaustFilters(db)
 
+
+        for f in useFilter.keys():
+            if useFilter[f] == True:
+                # Cycle filters properties!
+                optionList = eval(f)
+                # Select values in filter
+                for selected in combinations(optionList.keys(), valueCount):
+                    if abortEvent.is_set():
+                        print "Aborting..."
+                        return False
+
+                    # Turn off all options
+                    for v in optionList.keys():
+                        optionList[v] = False
+
+                    # Turn on selected set
+                    for v in selected:
+                        optionList[v] = True
+
+                    # Test values
+                    query = buildQuery()
+                    result = db.getROIandCount(query)
+                    if result[0] > highestROI and result[1] > minNoteCount:
+                        highestROI = result[0]
+                        highestCount = result[1]
+                        highestQuery = query
+                    queryCount = queryCount + 1
+
+    # Print Results #
     print "===================================================================="
     print "Highest ROI:\t", highestROI
     print "Highest Query:\t", highestQuery
@@ -128,3 +140,23 @@ def runGenerator(db):
     print "\nNumber of Queries:\t", queryCount
     print "Elapsed Time: ", time.time() - startTime
 
+    # Finished
+    return True  
+
+
+class Generator(threading.Thread):
+    """Use class to easily thread"""
+    # Should be daemon thread?
+
+    def __init__(self, db):
+        # Db must be passed as arg
+        self._abortEvent = threading.Event()
+        self._abortEvent.clear()
+        super(Generator, self).__init__(target=runGenerator, name="Generator", args=(db, self._abortEvent))
+        
+
+    def stop(self):
+        self._abortEvent.set()
+
+    def stopped(self):
+        return self._abortEvent.isSet()

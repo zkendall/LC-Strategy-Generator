@@ -1,18 +1,13 @@
-#-------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 # Name:         Lending Club Strategy Generator
 # Purpose:      To generate strategies to choose notes on LendingClub.com
 # Author:       Zachariah Kendall
 # Created:      04/01/2013
-#
-# Version:      0.5
-# Notes:        I began this idea in Java in December 2012.
-#               I taught myself SQL and trying out many differ Java implementations of it.
-#               At the time I started teachign myself Python over Christmas break.
-#               I decided to switch the project over to Python as a way of learning Python.
-#-------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 
 # Global imports
 import wx, os, logging
+import wx.lib.delayedresult as delayedresult
 
 # Local imports
 import Generator, Db
@@ -39,21 +34,28 @@ class MyWindow(wx.Frame):
     def InitUI(self):
         self.currentDirectory = os.getcwd()
 
-        # Main panel #
-        panel = wx.Panel(self)
-        panel.SetBackgroundColour('#4f5049')
+        # Main Panels #
+        panBottom = wx.Panel(self)
+        panBottom.SetBackgroundColour('#555555')
         vbox = wx.BoxSizer(wx.VERTICAL)
         # Inner
-        midPan = wx.Panel(panel)
-        midPan.SetBackgroundColour('#ededed')
-        vbox.Add(midPan, 1, wx.EXPAND | wx.ALL, 10)
-        # Top Button Set
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        btn1 = wx.Button(midPan, label='Generate')
-        btn1.Bind(wx.EVT_BUTTON, self.onGenerate)
-        hbox1.Add(btn1)
+        panTop = wx.Panel(self);
+        panTop.SetBackgroundColour('#eeeeee')
+        vbox.Add(panTop, 1, wx.EXPAND | wx.ALL, 10)
+        vbox.Add(panBottom, 1, wx.EXPAND | wx. ALL, 10)
+        self.SetSizer(vbox)
 
-        panel.SetSizer(vbox)
+
+        # Top Button Set
+        self.btnGenerate = wx.Button(panTop, -1, "Generate")
+        self.btnGenerate.Bind(wx.EVT_BUTTON, self.onGenerate)
+        self.btnAbort = wx.Button(panTop, -1, "Abort")
+        self.btnAbort.Bind(wx.EVT_BUTTON, self.onAbort)
+
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(self.btnGenerate, 0, wx.ALL, 5)
+        hsizer.Add(self.btnAbort, 0, wx.ALL, 5)
+        panTop.SetSizer(hsizer)
 
         # File Menu #
         fileMenu = wx.Menu()
@@ -114,9 +116,37 @@ class MyWindow(wx.Frame):
             db.connectToDb(path)
         dlg.Destroy()
 
+
+
     def onGenerate(self, e):
         """Run Generator"""
-        Generator.runGenerator(db)
+        self.btnGenerate.Enable(False)
+        self.btnAbort.Enable(True)
+        self.generator_thread = Generator.Generator(db)  # Pass in database
+        self.generator_thread.start()
+        # Other options I experimented with #
+        #thread.start_new_thread(Generator.runGenerator,(db))
+        #delayedresult.startWorker(self.resultConsumer, # Send finished result
+                                  #Generator.runGenerator(db))
+
+
+    def resultConsumer(self, delayedresult):
+        # reinable disabled interface.
+        self.btnGenerate.Enable(True)
+        self.btnAbort.Enable(False)
+       
+
+    def onAbort(self, e):
+        print "Aborting generator..."
+        self.generator_thread.stop();
+        self.btnAbort.SetLabel("Aborting")
+        self.generator_thread.join()
+        self.btnGenerate.Enable(True)
+        self.btnAbort.Enable(False)
+        self.btnAbort.SetLabel("Abort")
+        
+
+
 
 
 ##########################################################
