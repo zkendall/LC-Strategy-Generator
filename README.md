@@ -1,7 +1,9 @@
 # Read Me #
 
+# How to use #
+[ Place holder]
 
-
+# Log #
 February 22, 2013:
 After getting it to work in console mode, I've been developing a UI for the app.
 
