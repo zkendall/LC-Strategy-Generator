@@ -11,7 +11,7 @@ To Do:
 - Fix the ROI calclulation
 - Add all filter options. Currently I've only added a few filters and options, just enough to see if things work.
 - Get threading to work both with generator and with database building from CSV.
-
+- Develope UI for filter options.
 
 
 
