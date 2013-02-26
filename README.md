@@ -8,7 +8,7 @@
 - Load previously built database.
 - Click generate
 - Currently the selection of filters are in the generator.py and must be modified by hand.
-- 
+
 
 # Log #
 February 22, 2013:
