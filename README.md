@@ -1,5 +1,7 @@
 # Read Me #
 
+Purpose: The goal of this project is to create an application that will generate strategies for selecting loans on LendingClub.com based on user constraints.
+
 # How to use #
 - Download the loan data from the Lending Club website (https://www.lendingclub.com/info/download-data.action)
 - Run LC Strategy Generato
