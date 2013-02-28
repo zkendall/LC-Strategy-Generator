@@ -98,8 +98,8 @@ class MyWindow(wx.Frame):
                 style=wx.OPEN | wx.MULTIPLE | wx.CHANGE_DIR
                 )
         if dlg.ShowModal() == wx.ID_OK:
-            paths = dlg.GetPath()
-            Db.csvFileAddress = paths
+            path = dlg.GetPath()
+            db.buildDb(path);
         dlg.Destroy()
 
     def onOpenDb(self, e):
@@ -122,18 +122,19 @@ class MyWindow(wx.Frame):
         """Run Generator"""
         self.btnGenerate.Enable(False)
         self.btnAbort.Enable(True)
-        self.generator_thread = Generator.Generator(db)  # Pass in database
+        self.generator_thread = Generator.MyThread(db)  # Pass in database
         self.generator_thread.start()
+        
         # Other options I experimented with #
-        #thread.start_new_thread(Generator.runGenerator,(db))
-        #delayedresult.startWorker(self.resultConsumer, # Send finished result
-                                  #Generator.runGenerator(db))
+        # thread.start_new_thread(Generator.runGenerator,(db))
+        # delayedresult.startWorker(self.resultConsumer, # Send finished result
+        #                           Generator.runGenerator(db))
 
 
-    def resultConsumer(self, delayedresult):
-        # reinable disabled interface.
-        self.btnGenerate.Enable(True)
-        self.btnAbort.Enable(False)
+    # def resultConsumer(self, delayedresult):
+    #     # reinable disabled interface.
+    #     self.btnGenerate.Enable(True)
+    #     self.btnAbort.Enable(False)
        
 
     def onAbort(self, e):
@@ -156,7 +157,7 @@ class MyApp(wx.App):
         wx.App.__init__(self, redirect, filename)
         self.frame = MyWindow(None)
         self.frame.Show()
-        self.frame.Centre()
+        #self.frame.Centre()
         self.frame.SetTitle('LendingClub Strategy Generator')
 
 if __name__ == '__main__':

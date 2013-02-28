@@ -2,7 +2,8 @@
 # Name:     Lending Club Database Module
 # Purpose:  Manage SQLite db for generator
 # Author:   Zachariah Kendall
-# Log:      01/~~/2013 - Created
+# Created:  01/~~/2013
+# Modified: 02/23/2013
 #-------------------------------------------------------------------------------
 
 import sqlite3, csv
@@ -20,22 +21,24 @@ class Db(object):
             print "Db connection closed"
 
     def connectToDb(self, dbFilename='loans.db'):
-        print "Connecting to db"
+        print "Connecting to database"
         self.conn = sqlite3.connect(dbFilename, check_same_thread = False)  # Thank god this option exists!
                                                                             # But, will it effect performance or lead to crashes?
         self.cursor = self.conn.cursor()
         self.dbLoaded = True
-        print "Connected to db"
+        print "Connected to database"
 
-    def buildDb(self, csvFileAddress='LoanStats.csv' , dbFilename='loans.db'):
+    def buildDb(self, csvFileAddress='LoanStats.csv', dbFilename='loansNew.db'):
+        print "Building database from", csvFileAddress
         # If db exists ask to replace.
-        # The prompt needs changed to window.
-##      replace = 'n'
-##      if os.path.isfile(dbFilenamedbFilenamedbFilename):
-##          #replace = raw_input("Database Exists. Remove and replace? y/n")
-##          if replace == 'y':
-##              try: os.remove(dbFilenamedbFilename)
-##              except: print "Could not remove", dbFilename
+        if os.path.isfile(dbFilename):
+            replace = raw_input("Database Exists. Remove and replace? (y/n)")  # The prompt needs changed to windowed.
+            if replace == 'y':
+                try: os.remove(dbFilename)
+                except:
+                    print "Could not remove", dbFilename
+                    return
+            else: return
 
         # Connect
         self.conn = sqlite3.connect(dbFilename)
@@ -166,13 +169,14 @@ class Db(object):
 ################################################################################
 #######################  Helper Methods for building Db  #######################
 ################################################################################
-def calculateROI(self, loanAmount, paidAmount):
+def calculateROI(loanAmount, paidAmount):
+    """I'm not sure how accurate this is..."""
     amount = float(loanAmount)
     ret = (float(paidAmount) - amount) / amount
     return round(ret * 100, 1)  # Percentageize
 
 
-def assignFicoRange(self, f):
+def assignFicoRange(f):
     # Fico range is currently listed in ranges of 5.
     # This makes 42 options. I'm 'expanding' the
     # bucket range to a 25pt spread for convenience.

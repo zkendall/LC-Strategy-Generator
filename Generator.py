@@ -111,9 +111,9 @@ def runGenerator(db, abortEvent):
                 optionList = eval(f)
                 # Select values in filter
                 for selected in combinations(optionList.keys(), valueCount):
-                    if abortEvent.is_set():
-                        print "Aborting..."
-                        return False
+                    # if abortEvent.is_set():
+                    #     print "Aborting..."
+                    #     return False
 
                     # Turn off all options
                     for v in optionList.keys():
@@ -144,7 +144,7 @@ def runGenerator(db, abortEvent):
     return True  
 
 
-class Generator(threading.Thread):
+class MyThread(threading.Thread):
     """Use class to easily thread"""
     # Should be daemon thread?
 
@@ -152,7 +152,7 @@ class Generator(threading.Thread):
         # Db must be passed as arg
         self._abortEvent = threading.Event()
         self._abortEvent.clear()
-        super(Generator, self).__init__(target=runGenerator, name="Generator", args=(db, self._abortEvent))
+        super(MyThread, self).__init__(target=runGenerator, name="MyThread", args=(db, self._abortEvent))
         
 
     def stop(self):
