@@ -12,10 +12,10 @@ The goal of this project is to create an application that will generate strategi
 
 
 # Log #
-March 8, 2013:
+<b>March 8, 2013:</b>
 I had two exams this morning, so this afternoon I was finally able to work on this. I brought together some changes I started last week regarding how the algorithm processes filters. I also got a working version of the progress calculator.
 
-February 22, 2013:
+<b>February 22, 2013:</b>
 After getting it to work in console mode, I've been developing a UI for the app.
 
 
