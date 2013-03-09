@@ -3,7 +3,7 @@ The goal of this project is to create an application that will generate strategi
 
 # How to use #
 - Download the loan data from the Lending Club website (https://www.lendingclub.com/info/download-data.action)
-- Run LC Strategy Generato
+- Run LC Strategy Generator.
 - From the menu select CSV to build database.
  OR
 - Load previously built database.
@@ -22,7 +22,7 @@ After getting it to work in console mode, I've been developing a UI for the app.
 # To Do #
 - All UI progress bar
 - Develop UI for filter options: How about a side panel tree structure?
-- Fix the ROI calclulation.
+- Fix the ROI calculation.
 - Add all filter options. Currently I've only added a few filters and options, just enough to see if things work.
 - Get threading to work with building database from CSV.
 
