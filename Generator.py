@@ -3,41 +3,57 @@
 # Purpose:  Used to iterate through combinations of loan filters.
 #              - The generator class subclasses Thread.
 # Author:   Zachariah Kendall
-# Log:      01/--/2013 - Created
-#           02/20/2013 - Made to run in seperate thread
 #-------------------------------------------------------------------------------
 
 from itertools import combinations
+from scipy.misc import comb
 import threading #from threading import Thread
 import time
 
+
+## RIGHT NOW IT IS USING THE OPTION FILTERS FOR THE GENERATOR>
+# THIS CAUSES IT TO IGNORE THE CHOICES AND ITERATE THROUGH ALL OF THEM
+# NEED TO FILL A SEPERATE LIST FOR EACH FILTER AND EACH FILTERS OPTIONS BEFORE GENERATING.
+
 # Filter options #
-useFilter = {"employmentLength": False, "homeOwnership": False, "loanLength": False, \
-                 "inquiriesSixMonths": False, "creditGrade": False, "ficoRange": False, \
+
+filters = {"employmentLength": True, "homeOwnership": True, "loanLength": True, 
+                 "inquiriesSixMonths": False, "creditGrade": False, "ficoRange": False, 
                  }  #"status": True
 employmentLength = {"'1'": False, "'2'": False, "'3'": True, "'4'": True, "'5'": False}
 homeOwnership = {"'MORTGAGE'": True, "'OTHER'" : False, "'OWN'" : True, "'RENT'": True}
 loanLength = {"'36 months'": True, "'60 months'": False}
 inquiriesSixMonths = {"'1'": False, "'2'": False, "'3'": True, "'4'": True, "'5'": False}
-creditGrade = {"'A'": False, "'B'": False, "'C'": True, "'D'": True,\
+creditGrade = {"'A'": False, "'B'": False, "'C'": True, "'D'": True,
                 "'E'": False, "'F'": False, "'G'": False}
-ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": True,\
-                 "'726-750'": True, "'751-775'": False,\
+ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": True,
+                 "'726-750'": True, "'751-775'": False,
                  "'776-800'": False, "'801-825'": False, "'826-850'": False}
 ##ficoRangeMin = 640   # low is 640
 ##ficoRangeMax = 850   # High is 850
-status = {"'In Review'": False, "'Issued'": False, "'Current'": False, \
-        "'Fully Paid'": True, "'In Grace Period'": False, "'Late (16-30 days)'": False, \
-        "'Late (31-120 days)'": False, "'Performing Payment Plan'": False, \
+status = {"'In Review'": False, "'Issued'": False, "'Current'": False, 
+        "'Fully Paid'": True, "'In Grace Period'": False, "'Late (16-30 days)'": False, 
+        "'Late (31-120 days)'": False, "'Performing Payment Plan'": False, 
         "'Charged Off'": True, "'Default'": True}
         # How will I handle status?! That is why the roi is so low.
         #  There are lots of loans in review, in progress, etc... That produce an
         #  unreliable ROI.
 
+# Filter option buckets for generator
+use_filters = []
+use_employmentLength = []
+use_homeOwnership = []
+use_loanLength = []
+use_inquiriesSixMonths = []
+use_creditGrade = []
+use_ficoRange = []
+use_status = ["'Fully Paid'", "'Charged Off'", "'Default'"]
+
+
 # Other Options #
 doPrint = True      # Print selections and queries
 numFilters = 4      # How many filters to select at once
-valueCount = 4      # How many values to select at once
+numValues = 3       # How many values to select at once
 minNoteCount = 300  # The minimum number of notes to make it into 'highest'
 
 # Other Storage #
@@ -45,21 +61,39 @@ highestROI = 0
 highestCount = 0
 highestQuery = ""
 queryCount = 0
+totalCombinations = 0
+progress = 1
 
 # Other Other #
 #abortEvent = threading.Event()
 
+def getCombinationCount():
+    """Approximate the number of filter combinations for progress bar"""
+    total = 0
+    # need to loop from 1 through numFilters. # TO DO #
+    for f in filters.keys():
+            if filters[f] == True:
+                total += 1
+
+    combinations = 0
+    for n in xrange(1, numFilters):
+        combinations += comb(total, n)
+
+    return combinations
+
 
 def getFilter(f):
-    dic = eval(f)
-    ret = "%s in (" % (f) + ", ".join([key for key in dic.keys() if dic[key] == True]) + ")"
+    """Returns and SQL segment for the incoming filter"""
+    optionsBucket = eval("use_"+f)
+    ret = "%s in (" % (f) + ", ".join([o for o in optionsBucket]) + ")"
     return ret
 
 
 def buildQuery():
+    """Returns an SQL string made from enabled filters and options"""
     criteria = ['']
-    for f in useFilter.keys():
-        if useFilter[f] == True:
+    for f in filters.keys():
+        if filters[f] == True:
             criteria.append(getFilter(f))
 
     criteria.append(getFilter("status"))  # Always, use this? -> Handles all else being false...
@@ -76,61 +110,63 @@ def runGenerator(db, abortEvent):
         print "Databse is not loaded"
         return
     print "Generating. . ."
-    global numFilters
-    #global abortEvent
-    global highestROI
-    global highestCount
-    global highestQuery
-    global queryCount
-    global valueCount
-    global minNoteCount
+    global numFilters, use_filters, filters
+    global highestROI, highestCount, highestQuery
+    global queryCount, numValues, minNoteCount
+    global totalCombinations, progress
     startTime = time.time()
-    # Select filter set
-    for f in combinations(useFilter.keys(), numFilters):
-        if abortEvent.is_set():
-            print "Aborting..."
-            return False
-            
-        # Turn off all filters
-        for k in useFilter.keys():
-            useFilter[k] = False
-        # Turn on selected set
-        for k in f:
-            useFilter[k] = True
 
-        # Print selected
-        if doPrint:
-            print "Selected filters: \t", [a for a in useFilter.keys() if useFilter[a] == True]
+    totalCombinations = getCombinationCount()
+    print "Total Combinations:", totalCombinations
 
-        #Use filters....
+    # Select combinations
+    for fcount in xrange(1, numFilters):  #Select from 1 to numFilters.
+        print "Selecting", fcount, "filters"
+        for fs in combinations([k for k in filters if filters[k] == True], fcount):
 
+            # Update progress bar
+            progress += 1
+            print "Progress: ", (progress / totalCombinations)
 
-        for f in useFilter.keys():
-            if useFilter[f] == True:
-                # Cycle filters properties!
+            # Put selection in use-bucket
+            del use_filters[:]
+            for i in fs:
+                use_filters.append(i) # Take individual items out of tupple
+
+            # Print selected
+            if doPrint:
+                print "Selected filters: ", use_filters
+
+            #Use filters; cycle filters' properties
+            for f in use_filters:
                 optionList = eval(f)
-                # Select values in filter
-                for selected in combinations(optionList.keys(), valueCount):
-                    # if abortEvent.is_set():
-                    #     print "Aborting..."
-                    #     return False
+                optionBucket = eval("use_"+f)
 
-                    # Turn off all options
-                    for v in optionList.keys():
-                        optionList[v] = False
+                # Select values in filter, out of enabled options
+                for vcount in xrange(1, numValues):
+                    print "Selecting", vcount, "values"
+                    for selectedValues in combinations([v for v in optionList if optionList[v] == True], vcount):
+                        if abortEvent.is_set():
+                            print "Aborting..."
+                            return False
 
-                    # Turn on selected set
-                    for v in selected:
-                        optionList[v] = True
+                        # Put values in filter's use-bucket
+                        del optionBucket[:]
+                        for i in selectedValues:
+                            optionBucket.append(i)
 
-                    # Test values
-                    query = buildQuery()
-                    result = db.getROIandCount(query)
-                    if result[0] > highestROI and result[1] > minNoteCount:
-                        highestROI = result[0]
-                        highestCount = result[1]
-                        highestQuery = query
-                    queryCount = queryCount + 1
+                        # Test values
+                        query = buildQuery()
+                        result = db.getROIandCount(query)
+
+                        # Save highest
+                        if result[0] > highestROI and result[1] > minNoteCount:
+                            highestROI = result[0]
+                            highestCount = result[1]
+                            highestQuery = query
+
+                        queryCount += 1
+
 
     # Print Results #
     print "===================================================================="
@@ -141,7 +177,7 @@ def runGenerator(db, abortEvent):
     print "Elapsed Time: ", time.time() - startTime
 
     # Finished
-    return True  
+    return True
 
 
 class MyThread(threading.Thread):
@@ -153,10 +189,10 @@ class MyThread(threading.Thread):
         self._abortEvent = threading.Event()
         self._abortEvent.clear()
         super(MyThread, self).__init__(target=runGenerator, name="MyThread", args=(db, self._abortEvent))
-        
+
 
     def stop(self):
         self._abortEvent.set()
 
     def stopped(self):
-        return self._abortEvent.isSet()
+        return self._abortEvent.isSet()     # This needs to be an event that returns UI to normal.
