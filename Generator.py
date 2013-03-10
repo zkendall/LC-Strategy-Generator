@@ -7,23 +7,23 @@
 
 from itertools import combinations
 from scipy.misc import comb
-import threading #from threading import Thread
+import threading  #from threading import Thread
 import time
 
 
-## RIGHT NOW IT IS USING THE OPTION FILTERS FOR THE GENERATOR>
-# THIS CAUSES IT TO IGNORE THE CHOICES AND ITERATE THROUGH ALL OF THEM
-# NEED TO FILL A SEPERATE LIST FOR EACH FILTER AND EACH FILTERS OPTIONS BEFORE GENERATING.
+
 
 # Filter options #
-
-filters = {"employmentLength": True, "homeOwnership": True, "loanLength": True, 
-                 "inquiriesSixMonths": False, "creditGrade": False, "ficoRange": False, 
-                 }  #"status": True
-employmentLength = {"'1'": False, "'2'": False, "'3'": True, "'4'": True, "'5'": False}
-homeOwnership = {"'MORTGAGE'": True, "'OTHER'" : False, "'OWN'" : True, "'RENT'": True}
+filters = {"employmentLength": True, "homeOwnership": True, "loanLength": True,
+            "inquiriesSixMonths": False, "creditGrade": False,
+            "ficoRange": False}  #"status": True
+employmentLength = {"'1'": False, "'2'": False, "'3'": True, "'4'": True,
+                    "'5'": False}
+homeOwnership = {"'MORTGAGE'": True, "'OTHER'" : False, "'OWN'" : True,
+                 "'RENT'": True}
 loanLength = {"'36 months'": True, "'60 months'": False}
-inquiriesSixMonths = {"'1'": False, "'2'": False, "'3'": True, "'4'": True, "'5'": False}
+inquiriesSixMonths = {"'1'": False, "'2'": False, "'3'": True, "'4'": True,
+                    "'5'": False}
 creditGrade = {"'A'": False, "'B'": False, "'C'": True, "'D'": True,
                 "'E'": False, "'F'": False, "'G'": False}
 ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": True,
@@ -32,12 +32,13 @@ ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": True,
 ##ficoRangeMin = 640   # low is 640
 ##ficoRangeMax = 850   # High is 850
 status = {"'In Review'": False, "'Issued'": False, "'Current'": False, 
-        "'Fully Paid'": True, "'In Grace Period'": False, "'Late (16-30 days)'": False, 
-        "'Late (31-120 days)'": False, "'Performing Payment Plan'": False, 
-        "'Charged Off'": True, "'Default'": True}
+            "'Fully Paid'": True, "'In Grace Period'": False,
+            "'Late (16-30 days)'": False, "'Late (31-120 days)'": False,
+            "'Performing Payment Plan'": False, "'Charged Off'": True,
+            "'Default'": True}
         # How will I handle status?! That is why the roi is so low.
-        #  There are lots of loans in review, in progress, etc... That produce an
-        #  unreliable ROI.
+        #  There are lots of loans in review, in progress, etc... That produce
+        #  an unreliable ROI.
 
 # Filter option buckets for generator
 use_filters = []
@@ -72,7 +73,7 @@ def getCombinationCount():
     total = 0
     # need to loop from 1 through numFilters. # TO DO #
     for f in filters.keys():
-            if filters[f] == True:
+            if filters[f] is True:
                 total += 1
 
     combinations = 0
@@ -93,10 +94,11 @@ def buildQuery():
     """Returns an SQL string made from enabled filters and options"""
     criteria = ['']
     for f in filters.keys():
-        if filters[f] == True:
+        if filters[f] is True:
             criteria.append(getFilter(f))
 
-    criteria.append(getFilter("status"))  # Always, use this? -> Handles all else being false...
+    # Always, use this? -> Handles all else being false...
+    criteria.append(getFilter("status"))
 
     final = [x for x in criteria if x]
     query = "SELECT AVG(roi), COUNT(roi) FROM loan WHERE %s" % (" AND ".join(final))
@@ -120,9 +122,9 @@ def runGenerator(db, abortEvent):
     print "Total Combinations:", totalCombinations
 
     # Select combinations
-    for fcount in xrange(1, numFilters):  #Select from 1 to numFilters.
+    for fcount in xrange(1, numFilters):  # Select from 1 to numFilters.
         print "Selecting", fcount, "filters"
-        for fs in combinations([k for k in filters if filters[k] == True], fcount):
+        for fs in combinations([k for k in filters if filters[k] is True], fcount):
 
             # Update progress bar
             progress += 1
@@ -131,7 +133,7 @@ def runGenerator(db, abortEvent):
             # Put selection in use-bucket
             del use_filters[:]
             for i in fs:
-                use_filters.append(i) # Take individual items out of tupple
+                use_filters.append(i)  # Take individual items out of tupple
 
             # Print selected
             if doPrint:
@@ -145,7 +147,8 @@ def runGenerator(db, abortEvent):
                 # Select values in filter, out of enabled options
                 for vcount in xrange(1, numValues):
                     print "Selecting", vcount, "values"
-                    for selectedValues in combinations([v for v in optionList if optionList[v] == True], vcount):
+                    for selectedValues in combinations([v for v in optionList
+                                            if optionList[v] is True], vcount):
                         if abortEvent.is_set():
                             print "Aborting..."
                             return False
@@ -169,7 +172,7 @@ def runGenerator(db, abortEvent):
 
 
     # Print Results #
-    print "===================================================================="
+    print "==================================================================="
     print "Highest ROI:\t", highestROI
     print "Highest Query:\t", highestQuery
     print "Highest Count:\t", highestCount
@@ -188,11 +191,13 @@ class MyThread(threading.Thread):
         # Db must be passed as arg
         self._abortEvent = threading.Event()
         self._abortEvent.clear()
-        super(MyThread, self).__init__(target=runGenerator, name="MyThread", args=(db, self._abortEvent))
+        super(MyThread, self).__init__(target=runGenerator, name="MyThread",
+                                       args=(db, self._abortEvent))
 
 
     def stop(self):
         self._abortEvent.set()
 
     def stopped(self):
-        return self._abortEvent.isSet()     # This needs to be an event that returns UI to normal.
+        return self._abortEvent.isSet()
+        # ^This needs to be an event that returns UI to normal. TODO

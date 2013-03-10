@@ -22,8 +22,9 @@ class Db(object):
 
     def connectToDb(self, dbFilename='loans.db'):
         print "Connecting to database"
-        self.conn = sqlite3.connect(dbFilename, check_same_thread = False)  # Thank god this option exists!
-                                                                            # But, will it effect performance or lead to crashes?
+        # Is not 'check_same_thread' safe?
+        self.conn = sqlite3.connect(dbFilename, check_same_thread = False)
+                                                                            
         self.cursor = self.conn.cursor()
         self.dbLoaded = True
         print "Connected to database"
@@ -32,7 +33,8 @@ class Db(object):
         print "Building database from", csvFileAddress
         # If db exists ask to replace.
         if os.path.isfile(dbFilename):
-            replace = raw_input("Database Exists. Remove and replace? (y/n)")  # The prompt needs changed to windowed.
+            # TODO: The prompt needs changed to windowed.
+            replace = raw_input("Database Exists. Remove and replace? (y/n)")  
             if replace == 'y':
                 try: os.remove(dbFilename)
                 except:
@@ -63,8 +65,9 @@ class Db(object):
 
     # Parse CSV line and insert into db #
     def insertCSVLine(self, line):
-        command = "INSERT INTO loan VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," \
-           + "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        command = "INSERT INTO loan VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?," \
+           + "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," \
+           + " ?, ?, ?, ?, ?, ?)"
         values = (  line[0], # loanID
                     line[1], # amountRequested
                     line[2], # amountFunded
@@ -74,7 +77,7 @@ class Db(object):
                     line[5], # applicationDate
                     line[6], # applicationExpiration
                     line[7], # issueDate
-                    line[8][0], # creditGrade (Take letter only, so that in SQL we can do a fast direct comparison instead of slow LIKE)
+                    line[8][0], # creditGrade (Take letter only)
                     line[10], # loanPurpose
                     line[12], # monthlyPayment
                     line[13], # status
@@ -142,8 +145,9 @@ class Db(object):
             publicRecordsonFile INTEGER,
             employmentLength TEXT,
             initialListingStatus TEXT
-            )""" # Took out (at least) loanTitle TEXT, loanDescription TEXT,  city TEXT,  monthsLastRecord INTEGER,
-                 #  monthsLastRecord INTEGER,  education TEXT,  code TEXT, screenName TEXT,
+            )""" # Took out: loanTitle TEXT, loanDescription TEXT,  
+                 # city TEXT,  monthsLastRecord INTEGER, monthsLastRecord INTEGER,  
+                 # education TEXT,  code TEXT, screenName TEXT,
         self.cursor.execute(createTableQuery)
 
 ################################################################################
