@@ -1,9 +1,9 @@
-#Purpose#
+# Purpose #
 The goal of this project is to create an application that will generate strategies for selecting loans on LendingClub.com based on user constraints.
 
 # How to use #
 - Download the loan data from the Lending Club website (https://www.lendingclub.com/info/download-data.action)
-- Run LC Strategy Generato
+- Run LC Strategy Generator.
 - From the menu select CSV to build database.
  OR
 - Load previously built database.
@@ -12,14 +12,22 @@ The goal of this project is to create an application that will generate strategi
 
 
 # Log #
-February 22, 2013:
+<b>March 8, 2013:</b>
+I had two exams this morning, so this afternoon I was finally able to work on this. I brought together some changes I started last week regarding how the algorithm processes filters. I also got a working version of the progress calculator.
+
+<b>February 22, 2013:</b>
 After getting it to work in console mode, I've been developing a UI for the app.
 
-To Do:
-- Fix the ROI calclulation
+
+# To Do #
+- All UI progress bar
+- Develop UI for filter options: How about a side panel tree structure?
+- Fix the ROI calculation.
 - Add all filter options. Currently I've only added a few filters and options, just enough to see if things work.
-- Get threading to work both with generator and with database building from CSV.
-- Develope UI for filter options.
+- Get threading to work with building database from CSV.
+
+Done:
+- Got threading to work with generator.
 
 
 
