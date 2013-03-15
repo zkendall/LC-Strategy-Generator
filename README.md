@@ -23,15 +23,15 @@ After getting it to work in console mode, I've been developing a UI for the app.
 
 
 # To Do #
-- All UI progress bar
-- Develop UI for filter options: How about a side panel tree structure?
+- Add UI progress bar
+- Add UI for the other options in generator.py
 - Fix the ROI calculation.
 - Add all filter options. Currently I've only added a few filters and options, just enough to see if things work.
 - Get threading to work with building database from CSV.
 
 Done:
 - Got threading to work with generator.
-
+- Develop UI for filter options: A side panel tree structure.
 
 
 # Project's Pre-History #
