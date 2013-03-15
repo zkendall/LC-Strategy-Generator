@@ -12,6 +12,9 @@ The goal of this project is to create an application that will generate strategi
 
 
 # Log #
+<b>March 14, 2013:</b>
+Got a functioning tree control with checkboxes for the filters, and got it to successfully use the selected items in my generator.
+
 <b>March 8, 2013:</b>
 I had two exams this morning, so this afternoon I was finally able to work on this. I brought together some changes I started last week regarding how the algorithm processes filters. I also got a working version of the progress calculator.
 
