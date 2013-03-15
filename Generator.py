@@ -14,31 +14,35 @@ import time
 
 
 # Filter options #
-filters = {"employmentLength": True, "homeOwnership": True, "loanLength": True,
+filters = {"employmentLength": False, "homeOwnership": False, "loanLength": False,
             "inquiriesSixMonths": False, "creditGrade": False,
             "ficoRange": False}  #"status": True
-employmentLength = {"'1'": False, "'2'": False, "'3'": True, "'4'": True,
+employmentLength = {"'1'": False, "'2'": False, "'3'": False, "'4'": False,
                     "'5'": False}
-homeOwnership = {"'MORTGAGE'": True, "'OTHER'" : False, "'OWN'" : True,
-                 "'RENT'": True}
-loanLength = {"'36 months'": True, "'60 months'": False}
-inquiriesSixMonths = {"'1'": False, "'2'": False, "'3'": True, "'4'": True,
+homeOwnership = {"'OWN'" : False, "'MORTGAGE'": False, "'RENT'": False,
+                 "'OTHER'" : False,}
+loanLength = {"'36 months'": False, "'60 months'": False}
+inquiriesSixMonths = {"'1'": False, "'2'": False, "'3'": False, "'4'": False,
                     "'5'": False}
-creditGrade = {"'A'": False, "'B'": False, "'C'": True, "'D'": True,
+creditGrade = {"'A'": False, "'B'": False, "'C'": False, "'D'": False,
                 "'E'": False, "'F'": False, "'G'": False}
-ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": True,
-                 "'726-750'": True, "'751-775'": False,
+ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": False,
+                 "'726-750'": False, "'751-775'": False,
                  "'776-800'": False, "'801-825'": False, "'826-850'": False}
-##ficoRangeMin = 640   # low is 640
-##ficoRangeMax = 850   # High is 850
 status = {"'In Review'": False, "'Issued'": False, "'Current'": False, 
-            "'Fully Paid'": True, "'In Grace Period'": False,
+            "'Fully Paid'": False, "'In Grace Period'": False,
             "'Late (16-30 days)'": False, "'Late (31-120 days)'": False,
-            "'Performing Payment Plan'": False, "'Charged Off'": True,
-            "'Default'": True}
+            "'Performing Payment Plan'": False, "'Charged Off'": False,
+            "'Default'": False}
         # How will I handle status?! That is why the roi is so low.
         #  There are lots of loans in review, in progress, etc... That produce
         #  an unreliable ROI.
+
+def toggleFilter(cat, key, value):
+    category = eval(cat)
+    category[key] = value
+    print category, key, value
+
 
 # Filter option buckets for generator
 use_filters = []
@@ -86,7 +90,9 @@ def getCombinationCount():
 def getFilter(f):
     """Returns and SQL segment for the incoming filter"""
     optionsBucket = eval("use_"+f)
-    ret = "%s in (" % (f) + ", ".join([o for o in optionsBucket]) + ")"
+    ret = ""
+    if optionsBucket:
+        ret = "%s in (" % (f) + ", ".join([o for o in optionsBucket]) + ")"
     return ret
 
 
@@ -109,7 +115,7 @@ def buildQuery():
 
 def runGenerator(db, abortEvent):
     if not db.dbLoaded:
-        print "Databse is not loaded"
+        print "Database is not loaded"
         return
     print "Generating. . ."
     global numFilters, use_filters, filters
@@ -123,7 +129,6 @@ def runGenerator(db, abortEvent):
 
     # Select combinations
     for fcount in xrange(1, numFilters):  # Select from 1 to numFilters.
-        print "Selecting", fcount, "filters"
         for fs in combinations([k for k in filters if filters[k] is True], fcount):
 
             # Update progress bar
@@ -146,7 +151,6 @@ def runGenerator(db, abortEvent):
 
                 # Select values in filter, out of enabled options
                 for vcount in xrange(1, numValues):
-                    print "Selecting", vcount, "values"
                     for selectedValues in combinations([v for v in optionList
                                             if optionList[v] is True], vcount):
                         if abortEvent.is_set():

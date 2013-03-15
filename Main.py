@@ -30,7 +30,7 @@ class MyWindow(wx.Frame):
     global db
     def __init__(self, *args, **kwargs):
         super(MyWindow, self).__init__(*args, **kwargs)
-        self.SetSize((250, 300))
+        self.SetSize((640, 480))
         # Initialize User Interface #
         self.InitUI()
 
@@ -46,10 +46,59 @@ class MyWindow(wx.Frame):
         self.custom_tree = CT.CustomTreeCtrl(panLeft, -1)
 
         # Add Tree Items
-        root = self.custom_tree.AddRoot("The Root Item")
+        root = self.custom_tree.AddRoot("Filters")
         root.Expand()
-        last = self.custom_tree.AppendItem(root, "item 1")
-        item = self.custom_tree.AppendItem(last,  "item 2", ct_type=1)
+        employment = self.custom_tree.AppendItem(root, "Employment Length ", ct_type=1,
+                                                    data="employmentLength")
+        self.custom_tree.AppendItem(employment, "1 Year ", ct_type=1, data="'1'")
+        self.custom_tree.AppendItem(employment, "2 Year ", ct_type=1, data="'2'")
+        self.custom_tree.AppendItem(employment, "3 Year ", ct_type=1, data="'3'")
+        self.custom_tree.AppendItem(employment, "4 Year ", ct_type=1, data="'4'")
+        self.custom_tree.AppendItem(employment, "5 Year ", ct_type=1, data="'5'")
+
+        homeShip = self.custom_tree.AppendItem(root, "Home Ownership ", ct_type=1,
+                                                data="homeOwnership")
+        self.custom_tree.AppendItem(homeShip, "Own", ct_type=1, data="'OWN'")
+        self.custom_tree.AppendItem(homeShip, "Mortgage", ct_type=1, data="'MORTGAGE'")
+        self.custom_tree.AppendItem(homeShip, "Rent", ct_type=1, data="'RENT'")
+        self.custom_tree.AppendItem(homeShip, "Other", ct_type=1, data="'OTHER'")
+
+        loanLength = self.custom_tree.AppendItem(root,  "Loan Length", ct_type=1,
+                                                    data="loanLength")
+        self.custom_tree.AppendItem(loanLength,"36 Months", ct_type=1, data="'36 MONTHS'")
+        self.custom_tree.AppendItem(loanLength,"60 Months", ct_type=1, data="'60 MONTHS'")
+
+        inquiries = self.custom_tree.AppendItem(root,  "Inquiries in Six Months", ct_type=1,
+                                                data="inquiriesSixMonths")
+        self.custom_tree.AppendItem(inquiries, "1", ct_type=1, data="'1'")
+        self.custom_tree.AppendItem(inquiries, "2", ct_type=1, data="'2'")
+        self.custom_tree.AppendItem(inquiries, "3", ct_type=1, data="'3'")
+        self.custom_tree.AppendItem(inquiries, "4", ct_type=1, data="'4'")
+        self.custom_tree.AppendItem(inquiries, "5", ct_type=1, data="'5'")
+
+        credit = self.custom_tree.AppendItem(root,  "Credit Grade", ct_type=1,
+                                                data="creditGrade")
+        self.custom_tree.AppendItem(credit, "A", ct_type=1, data="'A'")
+        self.custom_tree.AppendItem(credit, "B", ct_type=1, data="'B'")
+        self.custom_tree.AppendItem(credit, "C", ct_type=1, data="'C'")
+        self.custom_tree.AppendItem(credit, "D", ct_type=1, data="'D'")
+        self.custom_tree.AppendItem(credit, "E", ct_type=1, data="'E'")
+        self.custom_tree.AppendItem(credit, "F", ct_type=1, data="'F'")
+        self.custom_tree.AppendItem(credit, "G", ct_type=1, data="'G'")
+
+        fico = self.custom_tree.AppendItem(root,  "FICO Range", ct_type=1,
+                                            data="ficoRange")
+        self.custom_tree.AppendItem(fico, "640-675", ct_type=1, data="'640-675'")
+        self.custom_tree.AppendItem(fico, "676-700", ct_type=1, data="'676-700'")
+        self.custom_tree.AppendItem(fico, "701-725", ct_type=1, data="'701-725'")
+        self.custom_tree.AppendItem(fico, "726-750", ct_type=1, data="'726-750'")
+        self.custom_tree.AppendItem(fico, "751-775", ct_type=1, data="'751-775'")
+        self.custom_tree.AppendItem(fico, "776-800", ct_type=1, data="'776-800'")
+        self.custom_tree.AppendItem(fico, "801-825", ct_type=1, data="'801-825'")
+        self.custom_tree.AppendItem(fico, "826-850", ct_type=1, data="'826-850'")
+
+
+
         self.Bind(CT.EVT_TREE_ITEM_CHECKED, self.ItemChecked)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.custom_tree, -1, wx.EXPAND)
@@ -108,8 +157,19 @@ class MyWindow(wx.Frame):
 
 
     def ItemChecked(self, event):
-        print("Somebody checked something")
-        print(event.GetSelections())
+        item = event.GetItem()
+        isChecked = self.custom_tree.IsItemChecked(item)
+        print "Toggled:", isChecked
+        data = self.custom_tree.GetItemPyData(item)
+        parent = self.custom_tree.GetItemParent(item)
+
+        if self.custom_tree.GetItemText(parent) is "Filters":  # If parent is root
+            generator.filters[data] = isChecked
+            print generator.filters
+        else:  # filter option toggled 
+            generator.toggleFilter(self.custom_tree.GetItemPyData(parent), data, isChecked)
+
+        event.Skip()
 
 
     def OnQuit(self, e):
@@ -172,7 +232,7 @@ class MyWindow(wx.Frame):
         self.generator_thread.join()
         self.btnGenerate.Enable(True)
         self.btnAbort.Enable(False)
-        self.btnAbort.SetLabel("Abort")
+        SetLabel.btnAbort.SetLabel("Abort")
 
 
 
