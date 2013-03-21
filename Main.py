@@ -18,6 +18,10 @@ import db
 # Initialize Db #
 db = db.Db()
 
+# TODO: Remove this
+# Just so I don't have to manually load the db:
+db.connectToDb()
+
 # IDs #
 APP_EXIT = 1
 APP_OPEN_CSV = 2
@@ -35,18 +39,21 @@ class MyWindow(wx.Frame):
         self.InitUI()
 
     def InitUI(self):
+        """Build and place UI componants"""
         self.currentDirectory = os.getcwd()
 
         # Split Panels #
         splitter = wx.SplitterWindow(self, -1)
-        splitter.SetMinimumPaneSize(50)
+        splitter.SetMinimumPaneSize(30)
+        splitter.SetSashGravity(0.2)
+
 
         # Left Panel
         panLeft = wx.Panel(splitter, -1)
         self.custom_tree = CT.CustomTreeCtrl(panLeft, -1)
 
         # Add Tree Items
-        root = self.custom_tree.AddRoot("Filters")
+        root = self.custom_tree.AddRoot("Filters", data="employmentLength")
         root.Expand()
         employment = self.custom_tree.AppendItem(root, "Employment Length ", ct_type=1,
                                                     data="employmentLength")
@@ -65,8 +72,8 @@ class MyWindow(wx.Frame):
 
         loanLength = self.custom_tree.AppendItem(root,  "Loan Length", ct_type=1,
                                                     data="loanLength")
-        self.custom_tree.AppendItem(loanLength,"36 Months", ct_type=1, data="'36 MONTHS'")
-        self.custom_tree.AppendItem(loanLength,"60 Months", ct_type=1, data="'60 MONTHS'")
+        self.custom_tree.AppendItem(loanLength,"36 Months", ct_type=1, data="'36 months'")
+        self.custom_tree.AppendItem(loanLength,"60 Months", ct_type=1, data="'60 months'")
 
         inquiries = self.custom_tree.AppendItem(root,  "Inquiries in Six Months", ct_type=1,
                                                 data="inquiriesSixMonths")
@@ -98,13 +105,15 @@ class MyWindow(wx.Frame):
         self.custom_tree.AppendItem(fico, "826-850", ct_type=1, data="'826-850'")
 
 
-
-        self.Bind(CT.EVT_TREE_ITEM_CHECKED, self.ItemChecked)
+        self.Bind(CT.EVT_TREE_ITEM_CHECKED, self.itemChecked)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.custom_tree, -1, wx.EXPAND)
         panLeft.SetSizerAndFit(sizer)
         sizer.Layout()
 
+
+
+        self.loadPreferences()
         
         # Right Panels
         panRight = wx.Panel(splitter, -1)
@@ -118,7 +127,7 @@ class MyWindow(wx.Frame):
         panRight.SetSizer(vbox)
 
         splitter.SplitVertically(panLeft, panRight)
-
+        splitter.SetSashPosition(200)
 
         # Top Button Set
         self.btnGenerate = wx.Button(panTop, -1, "Generate")
@@ -141,7 +150,7 @@ class MyWindow(wx.Frame):
         fileMenu.AppendItem(open_db_mi)
         fileMenu.AppendItem(quit_mi)
 
-        self.Bind(wx.EVT_MENU, self.OnQuit, quit_mi)
+        self.Bind(wx.EVT_MENU, self.onQuit, quit_mi)
         self.Bind(wx.EVT_MENU, self.onOpenCSV, open_csv_mi)
         self.Bind(wx.EVT_MENU, self.onOpenDb, open_db_mi)
 
@@ -156,23 +165,41 @@ class MyWindow(wx.Frame):
         self.statusbar.Show()
 
 
-    def ItemChecked(self, event):
+    def itemChecked(self, event):
+        """Enable corresponding filter in the generator"""
         item = event.GetItem()
         isChecked = self.custom_tree.IsItemChecked(item)
         print "Toggled:", isChecked
-        data = self.custom_tree.GetItemPyData(item)
         parent = self.custom_tree.GetItemParent(item)
+        data = self.custom_tree.GetItemPyData(item)
 
-        if self.custom_tree.GetItemText(parent) is "Filters":  # If parent is root
-            generator.filters[data] = isChecked
-            print generator.filters
-        else:  # filter option toggled 
-            generator.toggleFilter(self.custom_tree.GetItemPyData(parent), data, isChecked)
+        generator.toggleFilter(self.custom_tree.GetItemPyData(parent), data, isChecked)
 
         event.Skip()
 
+    def loadPreferences(self):
+        """Get filter options from generator and eneable corresponding UI"""
+        cur, cookie = self.custom_tree.GetFirstChild(self.custom_tree.GetRootItem())
+        f = generator.filters
+        while cur:
+            data = self.custom_tree.GetItemPyData(cur)
+            if f[data]:
+                self.custom_tree.CheckItem(cur)
+                cur.Expand()
 
-    def OnQuit(self, e):
+            child, cookie = self.custom_tree.GetFirstChild(cur)
+            options = generator.getFilterDict(data)
+            while child:
+                data = self.custom_tree.GetItemPyData(child)
+                if options[data]:
+                    self.custom_tree.CheckItem(child)
+                child = self.custom_tree.GetNextSibling(child)
+
+            cur = self.custom_tree.GetNextSibling(cur)
+
+
+    def onQuit(self, e):
+        """Close the application"""
         print "Quitting!"
         db.close()
         self.Close()
@@ -208,10 +235,15 @@ class MyWindow(wx.Frame):
 
     def onGenerate(self, e):
         """Run Generator"""
+        if not db.dbLoaded:
+            print "Database is not loaded"
+            return
         self.btnGenerate.Enable(False)
         self.btnAbort.Enable(True)
         self.generator_thread = generator.MyThread(db)  # Pass in database
         self.generator_thread.start()
+
+        # TODO: Disable sidepanel options!
 
         # Other options I experimented with #
         # thread.start_new_thread(Generator.runGenerator,(db))
@@ -233,7 +265,6 @@ class MyWindow(wx.Frame):
         self.btnGenerate.Enable(True)
         self.btnAbort.Enable(False)
         SetLabel.btnAbort.SetLabel("Abort")
-
 
 
 

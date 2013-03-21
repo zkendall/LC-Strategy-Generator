@@ -14,18 +14,18 @@ import time
 
 
 # Filter options #
-filters = {"employmentLength": False, "homeOwnership": False, "loanLength": False,
-            "inquiriesSixMonths": False, "creditGrade": False,
+filters = {"employmentLength": True, "homeOwnership": False, "loanLength": False,
+            "inquiriesSixMonths": False, "creditGrade": True,
             "ficoRange": False}  #"status": True
-employmentLength = {"'1'": False, "'2'": False, "'3'": False, "'4'": False,
-                    "'5'": False}
-homeOwnership = {"'OWN'" : False, "'MORTGAGE'": False, "'RENT'": False,
+employmentLength = {"'1'": False, "'2'": True, "'3'": True, "'4'": True,
+                    "'5'": True}
+homeOwnership = {"'OWN'" : True, "'MORTGAGE'": False, "'RENT'": False,
                  "'OTHER'" : False,}
-loanLength = {"'36 months'": False, "'60 months'": False}
-inquiriesSixMonths = {"'1'": False, "'2'": False, "'3'": False, "'4'": False,
+loanLength = {"'36 months'": True, "'60 months'": False}
+inquiriesSixMonths = {"'1'": True, "'2'": False, "'3'": False, "'4'": False,
                     "'5'": False}
-creditGrade = {"'A'": False, "'B'": False, "'C'": False, "'D'": False,
-                "'E'": False, "'F'": False, "'G'": False}
+creditGrade = {"'A'": False, "'B'": True, "'C'": True, "'D'": True,
+                "'E'": True, "'F'": False, "'G'": False}
 ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": False,
                  "'726-750'": False, "'751-775'": False,
                  "'776-800'": False, "'801-825'": False, "'826-850'": False}
@@ -38,10 +38,17 @@ status = {"'In Review'": False, "'Issued'": False, "'Current'": False,
         #  There are lots of loans in review, in progress, etc... That produce
         #  an unreliable ROI.
 
-def toggleFilter(cat, key, value):
-    category = eval(cat)
-    category[key] = value
-    print category, key, value
+
+#These two functions are used to interface with the UI
+def toggleFilter(category, key, value):
+    """Enable filters as dictated by UI action"""
+    cat = eval(category)
+    cat[key] = value
+    print cat, key, value
+
+def getFilterDict(category):
+    """Return a filter dictionary list for UI building"""
+    return eval(category)
 
 
 # Filter option buckets for generator
@@ -114,9 +121,7 @@ def buildQuery():
 
 
 def runGenerator(db, abortEvent):
-    if not db.dbLoaded:
-        print "Database is not loaded"
-        return
+    """Runs the heavy lifting"""
     print "Generating. . ."
     global numFilters, use_filters, filters
     global highestROI, highestCount, highestQuery
@@ -165,6 +170,8 @@ def runGenerator(db, abortEvent):
                         # Test values
                         query = buildQuery()
                         result = db.getROIandCount(query)
+                        if doPrint:
+                            print result
 
                         # Save highest
                         if result[0] > highestROI and result[1] > minNoteCount:

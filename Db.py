@@ -13,7 +13,6 @@ import os.path
 class Db(object):
     def __init__(self):
         self.dbLoaded = False
-##        print "Db class initialized"
 
     def close(self):
         if hasattr(self, 'conn'):
@@ -22,7 +21,7 @@ class Db(object):
 
     def connectToDb(self, dbFilename='loans.db'):
         print "Connecting to database"
-        # Is not 'check_same_thread' safe?
+        # Is 'check_same_thread=False' safe?
         self.conn = sqlite3.connect(dbFilename, check_same_thread = False)
                                                                             
         self.cursor = self.conn.cursor()
