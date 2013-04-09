@@ -245,16 +245,6 @@ class MyWindow(wx.Frame):
 
         # TODO: Disable sidepanel options!
 
-        # Other options I experimented with #
-        # thread.start_new_thread(Generator.runGenerator,(db))
-        # delayedresult.startWorker(self.resultConsumer, # Send finished result
-        #                           Generator.runGenerator(db))
-
-
-    # def resultConsumer(self, delayedresult):
-    #     # reinable disabled interface.
-    #     self.btnGenerate.Enable(True)
-    #     self.btnAbort.Enable(False)
 
 
     def onAbort(self, e):

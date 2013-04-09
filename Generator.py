@@ -94,7 +94,7 @@ def getCombinationCount():
     return combinations
 
 
-def getFilter(f):
+def _getFilter(f):
     """Returns and SQL segment for the incoming filter"""
     optionsBucket = eval("use_"+f)
     ret = ""
@@ -103,15 +103,15 @@ def getFilter(f):
     return ret
 
 
-def buildQuery():
+def _buildQuery():
     """Returns an SQL string made from enabled filters and options"""
     criteria = ['']
     for f in filters.keys():
         if filters[f] is True:
-            criteria.append(getFilter(f))
+            criteria.append(_getFilter(f))
 
     # Always, use this? -> Handles all else being false...
-    criteria.append(getFilter("status"))
+    criteria.append(_getFilter("status"))
 
     final = [x for x in criteria if x]
     query = "SELECT AVG(roi), COUNT(roi) FROM loan WHERE %s" % (" AND ".join(final))
@@ -168,7 +168,7 @@ def runGenerator(db, abortEvent):
                             optionBucket.append(i)
 
                         # Test values
-                        query = buildQuery()
+                        query = _buildQuery()
                         result = db.getROIandCount(query)
                         if doPrint:
                             print result

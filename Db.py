@@ -2,8 +2,8 @@
 # Name:     Lending Club Database Module
 # Purpose:  Manage SQLite db for generator
 # Author:   Zachariah Kendall
-# Created:  01/~~/2013
-# Modified: 02/23/2013
+# Created:  01/--/2013
+# Modified: 04/06/2013
 #-------------------------------------------------------------------------------
 
 import sqlite3, csv
@@ -44,13 +44,13 @@ class Db(object):
         # Connect
         self.conn = sqlite3.connect(dbFilename)
         self.cursor = self.conn.cursor()
-        self.createTable()
+        self._createTable()
         with open(csvFileAddress, 'r') as csvfile:
             csvfile.next()  # skip header
             reader = csv.reader(csvfile, delimiter=',')
             for i, line in enumerate(reader):
                 ##try:
-                self.insertCSVLine(line)
+                self._insertCSVLine(line)
                 ##except Exception:
                 ##  print "Error on line", i , line
                 ##  print Exception
@@ -63,7 +63,7 @@ class Db(object):
         #  Include or not?
 
     # Parse CSV line and insert into db #
-    def insertCSVLine(self, line):
+    def _insertCSVLine(self, line):
         command = "INSERT INTO loan VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?," \
            + "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?," \
            + " ?, ?, ?, ?, ?, ?)"
@@ -72,7 +72,7 @@ class Db(object):
                     line[2], # amountFunded
                     line[3][0:1], # interestRate
                     line[4], # loanLength
-                    calculateROI(line[1], line[19]), # Calculated ROI
+                    _calculateROI(line[1], line[19]), # Calculated ROI
                     line[5], # applicationDate
                     line[6], # applicationExpiration
                     line[7], # issueDate
@@ -89,7 +89,7 @@ class Db(object):
                     line[22], # state
                     line[23], # homeOwnership
                     line[24], # montlyIncome
-                    assignFicoRange(line[25]), # ficoRange
+                    _assignFicoRange(line[25]), # ficoRange
                     line[26], # earliestCreditLine
                     line[27], # openCreditLines
                     line[28], # totalCreditLines
@@ -101,12 +101,12 @@ class Db(object):
                     line[34], # delinquenciesTwoYears
                     line[35], # monthsLastDelinquency
                     line[36], # publicRecordsonFile
-                    employmentInteger(line[39]), # employmentLength
+                    _employmentInteger(line[39]), # employmentLength
                     line[41]  # initialListingStatus
                 )
         self.cursor.execute(command, values)
 
-    def createTable(self):  #Add ROI
+    def _createTable(self):  #Add ROI
         createTableQuery = """CREATE TABLE loan (
             id INTEGER NOT NULL PRIMARY KEY,
             amountRequested REAL,
@@ -172,14 +172,14 @@ class Db(object):
 ################################################################################
 #######################  Helper Methods for building Db  #######################
 ################################################################################
-def calculateROI(loanAmount, paidAmount):
+def _calculateROI(loanAmount, paidAmount):
     """I'm not sure how accurate this is..."""
     amount = float(loanAmount)
     ret = (float(paidAmount) - amount) / amount
     return round(ret * 100, 1)  # Percentageize
 
 
-def assignFicoRange(f):
+def _assignFicoRange(f):
     # Fico range is currently listed in ranges of 5.
     # This makes 42 options. I'm 'expanding' the
     # bucket range to a 25pt spread for convenience.
@@ -204,7 +204,7 @@ def assignFicoRange(f):
         return '826-850'
 
 
-def employmentInteger(length):
+def _employmentInteger(length):
     if length[0] == '<':
         return 0
     else:
