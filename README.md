@@ -12,6 +12,9 @@ The goal of this project is to create an application that will generate strategi
 
 
 # Log #
+<b>August 6, 2013:</b>
+Redid logging a few days ago and started updating schema to match new data files from Lending Club.
+
 <b>March 14, 2013:</b>
 Got a functioning tree control with checkboxes for the filters, and got it to successfully use the selected items in my generator.
 
@@ -23,6 +26,8 @@ After getting it to work in console mode, I've been developing a UI for the app.
 
 
 # To Do #
+- Finish updating schema:
+	- Change columns from TEXT.
 - Add UI progress bar
 - Add UI for the other options in generator.py
 - Fix the ROI calculation.

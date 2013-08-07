@@ -14,22 +14,21 @@ import time
 
 
 # Filter options #
-filters = {"employmentLength": True, "homeOwnership": False, "loanLength": False,
-            "inquiriesSixMonths": False, "creditGrade": True,
-            "ficoRange": False}  #"status": True
-employmentLength = {"'1'": False, "'2'": True, "'3'": True, "'4'": True,
+filters = {"emp_length": True, "home_ownership": False, "loanLength": False,
+            "inq_last_6mths": False, "grade": True}  #"status": True
+emp_length = {"'1'": False, "'2'": True, "'3'": True, "'4'": True,
                     "'5'": True}
-homeOwnership = {"'OWN'" : True, "'MORTGAGE'": False, "'RENT'": False,
+home_ownership = {"'OWN'" : True, "'MORTGAGE'": False, "'RENT'": False,
                  "'OTHER'" : False,}
 loanLength = {"'36 months'": True, "'60 months'": False}
-inquiriesSixMonths = {"'1'": True, "'2'": False, "'3'": False, "'4'": False,
+inq_last_6mths = {"'1'": True, "'2'": False, "'3'": False, "'4'": False,
                     "'5'": False}
-creditGrade = {"'A'": False, "'B'": True, "'C'": True, "'D'": True,
+grade = {"'A'": False, "'B'": True, "'C'": True, "'D'": True,
                 "'E'": True, "'F'": False, "'G'": False}
-ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": False,
-                 "'726-750'": False, "'751-775'": False,
-                 "'776-800'": False, "'801-825'": False, "'826-850'": False}
-status = {"'In Review'": False, "'Issued'": False, "'Current'": False, 
+# ficoRange = {"'640-675'": False, "'676-700'": False, "'701-725'": False,
+#                  "'726-750'": False, "'751-775'": False,
+#                  "'776-800'": False, "'801-825'": False, "'826-850'": False}
+status = {"'In Review'": False, "'Issued'": False, "'Current'": False,
             "'Fully Paid'": False, "'In Grace Period'": False,
             "'Late (16-30 days)'": False, "'Late (31-120 days)'": False,
             "'Performing Payment Plan'": False, "'Charged Off'": False,
@@ -44,7 +43,7 @@ def toggleFilter(category, key, value):
     """Enable filters as dictated by UI action"""
     cat = eval(category)
     cat[key] = value
-    print cat, key, value
+    log("Generator: %s %s %s" % (cat, key, value))
 
 def getFilterDict(category):
     """Return a filter dictionary list for UI building"""
@@ -53,17 +52,17 @@ def getFilterDict(category):
 
 # Filter option buckets for generator
 use_filters = []
-use_employmentLength = []
-use_homeOwnership = []
+use_emp_length = []
+use_home_ownership = []
 use_loanLength = []
-use_inquiriesSixMonths = []
-use_creditGrade = []
-use_ficoRange = []
+use_inq_last_6mths = []
+use_grade = []
+#use_ficoRange = []
 use_status = ["'Fully Paid'", "'Charged Off'", "'Default'"]
 
 
 # Other Options #
-doPrint = True      # Print selections and queries
+doLog = False      # Print selections and queries
 numFilters = 4      # How many filters to select at once
 numValues = 3       # How many values to select at once
 minNoteCount = 300  # The minimum number of notes to make it into 'highest'
@@ -115,14 +114,14 @@ def _buildQuery():
 
     final = [x for x in criteria if x]
     query = "SELECT AVG(roi), COUNT(roi) FROM loan WHERE %s" % (" AND ".join(final))
-    if doPrint:
-        print "SQl Query:\t\t\t", query
+    log("Generator: \n" \
+            "\tSQL Query:\t%s" % (query))
     return query
 
 
 def runGenerator(db, abortEvent):
     """Runs the heavy lifting"""
-    print "Generating. . ."
+    log("Generator: Running. . .")
     global numFilters, use_filters, filters
     global highestROI, highestCount, highestQuery
     global queryCount, numValues, minNoteCount
@@ -130,7 +129,7 @@ def runGenerator(db, abortEvent):
     startTime = time.time()
 
     totalCombinations = getCombinationCount()
-    print "Total Combinations:", totalCombinations
+    log("Generator: Total Combinations: %s" % (totalCombinations))
 
     # Select combinations
     for fcount in xrange(1, numFilters):  # Select from 1 to numFilters.
@@ -138,16 +137,14 @@ def runGenerator(db, abortEvent):
 
             # Update progress bar
             progress += 1
-            print "Progress: ", (progress / totalCombinations)
+            log("Generator: Progress: %s%" % (progress / totalCombinations))
 
             # Put selection in use-bucket
             del use_filters[:]
             for i in fs:
                 use_filters.append(i)  # Take individual items out of tupple
 
-            # Print selected
-            if doPrint:
-                print "Selected filters: ", use_filters
+            log("Generator: Selected filters: %s" % (use_filters))
 
             #Use filters; cycle filters' properties
             for f in use_filters:
@@ -159,7 +156,7 @@ def runGenerator(db, abortEvent):
                     for selectedValues in combinations([v for v in optionList
                                             if optionList[v] is True], vcount):
                         if abortEvent.is_set():
-                            print "Aborting..."
+                            log("Generator: Aborting...")
                             return False
 
                         # Put values in filter's use-bucket
@@ -170,8 +167,8 @@ def runGenerator(db, abortEvent):
                         # Test values
                         query = _buildQuery()
                         result = db.getROIandCount(query)
-                        if doPrint:
-                            print result
+                        log("Results:\n" \
+                            "\tROI: %s, Count: %s " % (result[0], result[1]))
 
                         # Save highest
                         if result[0] > highestROI and result[1] > minNoteCount:
@@ -183,7 +180,7 @@ def runGenerator(db, abortEvent):
 
 
     # Print Results #
-    print "==================================================================="
+    print "======================  Generator Results  ======================"
     print "Highest ROI:\t", highestROI
     print "Highest Query:\t", highestQuery
     print "Highest Count:\t", highestCount
@@ -193,6 +190,9 @@ def runGenerator(db, abortEvent):
     # Finished
     return True
 
+def log(text):
+    if doLog:
+        print "Generator: ", text
 
 class MyThread(threading.Thread):
     """Use class to easily thread"""

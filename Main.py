@@ -13,6 +13,7 @@ import wx.lib.agw.customtreectrl as CT
 
 # Local imports
 import generator
+from generator import doLog
 import db
 
 # Initialize Db #
@@ -114,7 +115,7 @@ class MyWindow(wx.Frame):
 
 
         self.loadPreferences()
-        
+
         # Right Panels
         panRight = wx.Panel(splitter, -1)
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -169,7 +170,7 @@ class MyWindow(wx.Frame):
         """Enable corresponding filter in the generator"""
         item = event.GetItem()
         isChecked = self.custom_tree.IsItemChecked(item)
-        print "Toggled:", isChecked
+        log("Toggled \"%s\" %s" % (self.custom_tree.GetItemText(item), isChecked))
         parent = self.custom_tree.GetItemParent(item)
         data = self.custom_tree.GetItemPyData(item)
 
@@ -178,7 +179,7 @@ class MyWindow(wx.Frame):
         event.Skip()
 
     def loadPreferences(self):
-        """Get filter options from generator and eneable corresponding UI"""
+        """Get filter options from generator and enable corresponding UI"""
         cur, cookie = self.custom_tree.GetFirstChild(self.custom_tree.GetRootItem())
         f = generator.filters
         while cur:
@@ -200,7 +201,7 @@ class MyWindow(wx.Frame):
 
     def onQuit(self, e):
         """Close the application"""
-        print "Quitting!"
+        log("Quitting.")
         db.close()
         self.Close()
 
@@ -236,7 +237,7 @@ class MyWindow(wx.Frame):
     def onGenerate(self, e):
         """Run Generator"""
         if not db.dbLoaded:
-            print "Database is not loaded"
+            log("Database is not loaded")
             return
         self.btnGenerate.Enable(False)
         self.btnAbort.Enable(True)
@@ -248,16 +249,18 @@ class MyWindow(wx.Frame):
 
 
     def onAbort(self, e):
-        print "Aborting generator..."
+        log("Aborting generator...")
         self.generator_thread.stop()
         self.btnAbort.SetLabel("Aborting")
         self.generator_thread.join()
         self.btnGenerate.Enable(True)
         self.btnAbort.Enable(False)
-        SetLabel.btnAbort.SetLabel("Abort")
+        self.btnAbort.SetLabel("Abort")
 
 
-
+def log(text):
+    if doLog:
+        print "Main:", text
 
 ##########################################################
 
