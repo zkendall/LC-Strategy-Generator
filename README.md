@@ -12,6 +12,9 @@ The goal of this project is to create an application that will generate strategi
 
 
 # Log #
+<b>December 16, 2013:</b>
+This fall I started a version in C#. It is now a bit further along than the Python version. Still a lot of work to do though.
+
 <b>August 6, 2013:</b>
 Redid logging a few days ago and started updating schema to match new data files from Lending Club.
 
